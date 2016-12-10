@@ -9,8 +9,8 @@ int main()
 
 	AESEncryption Encryption;
 
-	for(int i = 0; i < 100; i++)
-		Encryption.generateKey(AES_128);
+	for(int i = 1; i <= 100; i++)
+		std::cout << i << ".) "<< Encryption.keyToBase64(Encryption.generateKey(AES_128)) << "\n";
 
 	system("pause");
 	return 0;

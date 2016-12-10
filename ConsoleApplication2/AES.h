@@ -49,7 +49,7 @@ public:
 	}
 
 	//generates a random key with a certain number of bits
-	void generateKey(int bits)
+	std::vector<bool> generateKey(int bits)
 	{
 		std::vector<bool> generatedKey(bits);
 
@@ -58,7 +58,7 @@ public:
 			generatedKey[i] = generator(randEngine); //generate a random 1 or 0
 		}
 
-		std::cout << keyToBase64(generatedKey) << std::endl;
+		return generatedKey;
 	}
 
 	//converts the key to base64
@@ -76,11 +76,11 @@ public:
 		/*
 			Basically this converts the binary key to base 64
 
-			at the end, when theres less than 2 bytes left, it adds a byte on the end until its divisible by 6
+			at the end, when theres less than 1 byte left, it adds a byte on the end until its divisible by 6
 
 			then it does the exact same thing (converting binary to base64) but at the end blank groups of 6 become '=' not 'A'
 		*/
-		for ( int i = 0; ((((totalKeyBits) - i) % 3 == 0) && i < totalKeyBits)|| (totalKeyBits - i >= 16); i+=6)
+		for ( int i = 0; ((((totalKeyBits) - i) % 3 == 0) && i < totalKeyBits)|| (totalKeyBits - i >= 8); i+=6)
 		{
 			std::vector<bool> tempN(6);
 
@@ -108,7 +108,7 @@ public:
 		totalKeyBits = intKey.size();
 
 		//do the same thing as above basically
-		for (int i = track; i < (totalKeyBits - 6); i += 6)
+		for (int i = track+6; i < (totalKeyBits - 6); i += 6)
 		{
 			std::vector<bool> tempN(6);
 
