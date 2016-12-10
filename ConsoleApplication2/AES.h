@@ -72,6 +72,14 @@ public:
 		//keeps track of what bit we left off on
 		int track = 0;
 
+
+		/*
+			Basically this converts the binary key to base 64
+
+			at the end, when theres less than 2 bytes left, it adds a byte on the end until its divisible by 6
+
+			then it does the exact same thing (converting binary to base64) but at the end blank groups of 6 become '=' not 'A'
+		*/
 		for ( int i = 0; ((((totalKeyBits) - i) % 3 == 0) && i < totalKeyBits)|| (totalKeyBits - i >= 16); i+=6)
 		{
 			std::vector<bool> tempN(6);
@@ -89,7 +97,7 @@ public:
 			track = i;
 		}
 
-		//add empty bytes to the end until it is divisible by 24
+		//add empty bytes to the end until it is divisible by 6
 		do
 		{
 			for (int i = 0; i < 8; i++)
@@ -99,6 +107,7 @@ public:
 
 		totalKeyBits = intKey.size();
 
+		//do the same thing as above basically
 		for (int i = track; i < (totalKeyBits - 6); i += 6)
 		{
 			std::vector<bool> tempN(6);
