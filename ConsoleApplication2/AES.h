@@ -7,6 +7,10 @@
 
 #define AES_128 128
 #define AES_256 256
+#define AES_196 196
+
+#define BYTE_SIZE 8 //1 byte is 8 bits
+#define OCTAL_SIZE 6 //an octal number is 6 bits
 
 std::mt19937 randEngine(time(NULL));
 std::uniform_int_distribution<int> generator(0, 1);
@@ -24,11 +28,11 @@ public:
 		{
 			decToB64[i] = (char)(i + 65);
 		}
-		for (int i = 26; i < 51; i++)
+		for (int i = 26; i < 52; i++)
 		{
 			decToB64[i] = (char)(i + 71);
 		}
-		for (int i = 51; i < 62; i++)
+		for (int i = 52; i < 62; i++)
 		{
 			decToB64[i] = i - 4;
 		}
@@ -60,16 +64,23 @@ public:
 
 	}
 
-	//generates a random key with a certain number of bits
+	/*
+		Generates a key <bits> long
+
+		technically imporperly, as it doesn't start from the smallest binary place
+		and go to the biggest, meaning there will always be trailing 0s if the size you want
+		is not divisible by 8. May fix later.
+	*/
 	std::vector<bool> generateKey(int bits)
 	{
-		std::vector<bool> generatedKey(bits);
+
+		//the key is the size in bits, rounded to the nearest byte.
+		std::vector<bool> generatedKey(bits + (bits % BYTE_SIZE));
 
 		for (int i = 0; i < bits; i++)
 		{
 			generatedKey[i] = generator(randEngine); //generate a random 1 or 0
 		}
-
 		return generatedKey;
 	}
 
@@ -84,24 +95,20 @@ public:
 		//keeps track of what bit we left off on
 		int track = 0;
 
-
 		/*
-			Basically this converts the binary key to base 64
+			Basically this converts binary to base 64
 
-			at the end, when theres less than 1 byte left, it adds a byte on the end until its divisible by 6
+			at the end, when theres not enough bytes left to split it to octals, it adds bytes on the end until its divisible by 6
 
-			then it does the exact same thing (converting binary to base64) but at the end blank groups of 6 become '=' not 'A'
+			then it does the exact same thing (converting binary to base64) but the final blank bytes in a 24 bit set become = not A
 		*/
-		for (int i = 0; ((((totalKeyBits)-i) % 3 == 0) && i < totalKeyBits) || (totalKeyBits - i >= 8); i += 6)
+		for (int i = 0; (((totalKeyBits-(i)) % 3 == 0) && (i < totalKeyBits)) || (i <= totalKeyBits - OCTAL_SIZE); i += 6)
 		{
-			std::vector<bool> tempN(6);
+			std::vector<bool> tempN(OCTAL_SIZE);
 
-			tempN[0] = intKey[i];
-			tempN[1] = intKey[i + 1];
-			tempN[2] = intKey[i + 2];
-			tempN[3] = intKey[i + 3];
-			tempN[4] = intKey[i + 4];
-			tempN[5] = intKey[i + 5];
+			//the next chunk of the binary array into the temp array
+			for (int c = i; c < i + OCTAL_SIZE; c++)
+				tempN[c-i] = intKey[c];
 
 			int getCharacter = binaryToBaseTen(tempN);
 
@@ -109,31 +116,31 @@ public:
 			track = i;
 		}
 
-		//add empty bytes to the end until it is divisible by 6
+		//add empty bytes to the end until there are 3 bytes left
 		do
 		{
-			for (int i = 0; i < 8; i++)
+			for (int i = 0; i < BYTE_SIZE; i++)
 				intKey.push_back(0);
 
-		} while (intKey.size() % 6 != 0);
+		} while (((intKey.size() - track)) % OCTAL_SIZE != 0);
 
+		//resets the totalKeyBits size, its bigger now
 		totalKeyBits = intKey.size();
 
-		//do the same thing as above basically
-		for (int i = track + 6; i < (totalKeyBits - 6); i += 6)
+		/* do the same thing as above basically, but the end needs to be =s instead of As
+		we add an octal_size because this works on the (octet?) after i */
+		for (int i = track + OCTAL_SIZE; i < (totalKeyBits); i += OCTAL_SIZE)
 		{
-			std::vector<bool> tempN(6);
+			std::vector<bool> tempN(OCTAL_SIZE);
 
-			tempN[0] = intKey[i];
-			tempN[1] = intKey[i + 1];
-			tempN[2] = intKey[i + 2];
-			tempN[3] = intKey[i + 3];
-			tempN[4] = intKey[i + 4];
-			tempN[5] = intKey[i + 5];
+			//the next chunk of the binary array into the temp array
+			for (int c = i; c < i + OCTAL_SIZE; c++)
+				tempN[c - i] = intKey[c];
 
 			int getCharacter = binaryToBaseTen(tempN);
 
-			base64k += (getCharacter == 0) ? '=' : decToB64[getCharacter];
+			//we want the empty octal things that were not part of the original binary to be = not A to distinguish them.
+			base64k += ((getCharacter == 0) && (i > (track + OCTAL_SIZE))) ? '=' : decToB64[getCharacter];
 		}
 
 		return base64k;
@@ -155,102 +162,39 @@ public:
 	//converts base 10 to binary. in probably the WORST way
 	std::vector<bool> baseTenToBinary(int n)
 	{
-		std::vector<bool> binaryByte(8);
+		std::vector<bool> binaryByte(BYTE_SIZE);
 
-		//can't be bigger than 256 its just gonna be a char
-		int binaryArray[8] = { 1, 2, 4, 8, 16, 32, 64, 128 };
+		//can't be bigger than 255. This stores the values that each place in a binary number is equivalent to in decimal
+		int binaryArray[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
 
-		//LOL HOLY FUCK. ill make this better really soon... for now just enjoy the beautiful if statements
-		while (n > 0)
+		//each char will only be 1 byte.
+		for (int i = 0; i < BYTE_SIZE; i++)
 		{
-			if (n >= binaryArray[0])
+			if (n >= binaryArray[i])
 			{
-				if (n >= binaryArray[1])
-				{
-					if (n >= binaryArray[2])
-					{
-						if (n >= binaryArray[3])
-						{
-							if (n >= binaryArray[4])
-							{
-								if (n >= binaryArray[5])
-								{
-									if (n >= binaryArray[6])
-									{
-										if (n >= binaryArray[7])
-										{
-											n -= binaryArray[7];
-											binaryByte[0] = 1;
-										}
-										else
-										{
-											n -= binaryArray[6];
-											binaryByte[1] = 1;
-										}
-									}
-									else
-									{
-										n -= binaryArray[5];
-										binaryByte[2] = 1;
-									}
-								}
-								else
-								{
-									n -= binaryArray[4];
-									binaryByte[3] = 1;
-								}
-							}
-							else
-							{
-								n -= binaryArray[3];
-								binaryByte[4] = 1;
-							}
-						}
-						else
-						{
-							n -= binaryArray[2];
-							binaryByte[5] = 1;
-						}
-					}
-					else
-					{
-						n -= binaryArray[1];
-						binaryByte[6] = 1;
-					}
-				}
-				else
-				{
-					n -= binaryArray[0];
-					binaryByte[7] = 1;
-				}
-			}
-			else
-			{
-				n -= binaryArray[0];
+				n -= binaryArray[i];
+				binaryByte[i] = 1;
 			}
 		}
-
 		return binaryByte;
 	}
 
 	//converts a string to binary! nice!
 	std::vector<bool> stringToBinary(std::string s)
 	{
-		int sBitSize = s.length() * 8;
+		int sBitSize = s.length() * BYTE_SIZE;
 		std::vector<bool> binary(sBitSize);
 
 		int index = 0;
 
-		for (unsigned int i = 0; i < sBitSize - 8; i += 8)
+		for (unsigned int i = 0; i < sBitSize; i += 8)
 		{
 
 			std::vector<bool> byteTemp(8);
 			byteTemp = baseTenToBinary(s[index]);
 
-			for (int j = i; j < i + 8; j++)
-			{
+			for (int j = i; j < i + BYTE_SIZE; j++)
 				binary[j] = byteTemp[j - i];
-			}
 
 			index++;
 		}

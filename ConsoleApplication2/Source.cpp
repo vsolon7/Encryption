@@ -10,15 +10,24 @@ int main()
 
 	AESEncryption Encryption;
 
-	std::vector<bool> key = Encryption.generateKey(AES_128);
+	std::vector<bool> key = Encryption.generateKey(196);
 	std::vector<bool> encryptedBinary = Encryption.encrypt(key, toEncrypt);
+	std::vector<bool> stringBinary = Encryption.stringToBinary(toEncrypt);
 
 	
 
 	std::cout << "Key: " << Encryption.binaryToBase64(key) << "\n\n";
 	std::cout << "Message: " << toEncrypt << "\n\n";
 
-	std::cout << "EncryptedBinaryString: \n\n";
+	for (int i = 0; i < stringBinary.size(); i++)
+	{
+		std::cout << stringBinary[i];
+
+		if ((i + 1) % 8 == 0)
+			std::cout << " ";
+	}
+
+	std::cout << "\n\nEncryptedBinaryString: \n\n";
 
 	for (int i = 0; i < encryptedBinary.size(); i++)
 	{
