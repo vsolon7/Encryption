@@ -10,9 +10,10 @@ std::map<int, char> decToB64;
 //PROTOTYPES BEGIN
 
 int binaryToBaseTen(std::vector<bool>);
-std::vector<bool> stringToBinary(std::string s);
-double pow(int number, int power);
-std::string binaryToBase64(std::vector<bool> intKey);
+std::vector<bool> stringToBinary(std::string);
+double pow(int, int);
+std::string binaryToBase64(std::vector<bool>);
+std::string binaryToString(std::vector<bool>);
 void loadBase64Map();
 
 //PROTOTYPES END
@@ -39,7 +40,7 @@ void loadBase64Map()
 	decToB64[63] = '/';
 }
 
-//converts the key to base64
+//converts binary (in the form of a boolean vector) to base 64. returns a string
 std::string binaryToBase64(std::vector<bool> intKey)
 {
 	loadBase64Map();
@@ -73,12 +74,11 @@ std::string binaryToBase64(std::vector<bool> intKey)
 	}
 
 	//add empty bytes to the end until there are 3 bytes left
-	do
+	while (((intKey.size() - track)) % OCTAL_SIZE != 0 && (intKey.size() - track) > 0)
 	{
 		for (int i = 0; i < BYTE_SIZE; i++)
 			intKey.push_back(0);
-
-	} while (((intKey.size() - track)) % OCTAL_SIZE != 0);
+	}
 
 	//resets the totalKeyBits size, its bigger now
 	totalKeyBits = intKey.size();
@@ -147,7 +147,7 @@ std::vector<bool> stringToBinary(std::string s)
 	for (unsigned int i = 0; i < sBitSize; i += 8)
 	{
 		std::vector<bool> byteTemp(8);
-		byteTemp = baseTenToBinary(s[index]);
+		byteTemp = baseTenToBinary((unsigned char)s[index]);
 
 		for (unsigned int j = i; j < i + BYTE_SIZE; j++)
 			binary[j] = byteTemp[j - i];
@@ -155,11 +155,27 @@ std::vector<bool> stringToBinary(std::string s)
 		index++;
 	}
 
-	//we add the null terminating character to the end of the string.
-	for (unsigned int i = 0; i < 8; i++)
-		binary.push_back(0);
-
 	return binary;
+}
+
+std::string binaryToString(std::vector<bool> binary)
+{
+	std::string binToString = "";
+	int size = binary.size();
+
+	for (int i = 0; i < size; i+=8)
+	{
+		int charValue;
+		std::vector<bool> tempChunk(BYTE_SIZE);
+
+		for (int j = i; j < i + BYTE_SIZE; j++)
+			tempChunk[j - i] = binary[j];
+
+		charValue = binaryToBaseTen(tempChunk);
+		binToString += (char)charValue;
+	}
+
+	return binToString;
 }
 
 //My own power function. Enter the number followed by the power to raise it to

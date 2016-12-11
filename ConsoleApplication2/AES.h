@@ -11,7 +11,7 @@
 #define AES_196 196
 
 #define BYTE_SIZE 8 //1 byte is 8 bits
-#define OCTAL_SIZE 6 //an octal number is 6 bits
+#define OCTAL_SIZE 6 //an octal number thing is 6 bits
 
 std::mt19937 randEngine(time(nullptr));
 std::uniform_int_distribution<int> generator(0, 1);
@@ -38,9 +38,22 @@ public:
 	}
 
 	//TODO
-	std::string decrypt(std::vector<bool> key, std::string String)
+	std::string decrypt(std::vector<bool> key, std::string decrypt)
 	{
+		int size = decrypt.size() * 8;
+		std::vector<bool> binary = stringToBinary(decrypt);
 
+		std::string binStr;
+		std::vector<bool> decrypted(size);
+
+		for (int i = 0; i < size; i++)
+		{
+			decrypted[i] = binary[i] ^ key[i];
+		}
+
+		binStr = binaryToString(decrypted);
+
+		return binStr;
 	}
 
 	/*
