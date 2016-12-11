@@ -2,24 +2,25 @@
 #include "AES.h"
 #include <string>
 #include <random>
+#include "Math.h"
 
 int main()
 {
-	std::string toEncrypt = "My name is Vince";
+	std::string toEncrypt = "My name is Vinc";
 	//std::string encrypted;
 
 	AESEncryption Encryption;
 
-	std::vector<bool> key = Encryption.generateKey(196);
+	std::vector<bool> key = Encryption.generateKey(AES_128);
 	std::vector<bool> encryptedBinary = Encryption.encrypt(key, toEncrypt);
-	std::vector<bool> stringBinary = Encryption.stringToBinary(toEncrypt);
+	std::vector<bool> stringBinary = stringToBinary(toEncrypt);
 
-	
 
-	std::cout << "Key: " << Encryption.binaryToBase64(key) << "\n\n";
+
+	std::cout << "Key: " << binaryToBase64(key) << "\n\n";
 	std::cout << "Message: " << toEncrypt << "\n\n";
 
-	for (int i = 0; i < stringBinary.size(); i++)
+	for (unsigned int i = 0; i < stringBinary.size(); i++)
 	{
 		std::cout << stringBinary[i];
 
@@ -29,7 +30,7 @@ int main()
 
 	std::cout << "\n\nEncryptedBinaryString: \n\n";
 
-	for (int i = 0; i < encryptedBinary.size(); i++)
+	for (unsigned int i = 0; i < encryptedBinary.size(); i++)
 	{
 		std::cout << encryptedBinary[i];
 
