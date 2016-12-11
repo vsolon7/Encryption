@@ -36,7 +36,7 @@ public:
 		decToB64[63] = '/';
 	}
 
-	//TODO
+	//TODO, right now just XOR's it with a key and returns the binary result
 	std::vector<bool> encrypt(std::vector<bool> key, std::string String)
 	{
 		std::vector<bool> binStr(String.length() * 8 + 8);
@@ -74,7 +74,7 @@ public:
 	}
 
 	//converts the key to base64
-	std::string keyToBase64(std::vector<bool> intKey)
+	std::string binaryToBase64(std::vector<bool> intKey)
 	{
 		std::string base64k = "";
 
@@ -152,6 +152,7 @@ public:
 		return sum;
 	}
 
+	//converts base 10 to binary. in probably the WORST way
 	std::vector<bool> baseTenToBinary(int n)
 	{
 		std::vector<bool> binaryByte(8);
@@ -232,6 +233,7 @@ public:
 		return binaryByte;
 	}
 
+	//converts a string to binary! nice!
 	std::vector<bool> stringToBinary(std::string s)
 	{
 		int sBitSize = s.length() * 8;
