@@ -20,40 +20,34 @@ class AESEncryption
 {
 public:
 	//TODO, right now just XOR's it with a key and returns the binary result
-	std::vector<bool> encrypt(std::vector<bool> key, std::string String)
+	std::string XOREncryptDecrypt(std::vector<bool> key, std::string String)
 	{
-		std::vector<bool> binStr(String.length() * 8 + 8);
-		binStr = stringToBinary(String);
+		std::string encryptString;
+		std::string tempString;
 
+		std::vector<bool> binStr = stringToBinary(String);
 		int size = binStr.size();
+		int keySize = key.size();
 
 		std::vector<bool> encrypted(size);
 
 		for (int i = 0; i < size; i++)
 		{
-			encrypted[i] = binStr[i] ^ key[i];
+			static int j = i;
+
+			encrypted[i] = binStr[i] ^ key[j];
+
+			j++;
+
+			if (j >= (keySize - 1))
+				j = 0;
+
+			if (i == size - 1)
+				j = 0;
 		}
 
-		return encrypted;
-	}
-
-	//TODO
-	std::string decrypt(std::vector<bool> key, std::string decrypt)
-	{
-		int size = decrypt.size() * 8;
-		std::vector<bool> binary = stringToBinary(decrypt);
-
-		std::string binStr;
-		std::vector<bool> decrypted(size);
-
-		for (int i = 0; i < size; i++)
-		{
-			decrypted[i] = binary[i] ^ key[i];
-		}
-
-		binStr = binaryToString(decrypted);
-
-		return binStr;
+		encryptString = binaryToString(encrypted);
+		return encryptString;
 	}
 
 	/*
